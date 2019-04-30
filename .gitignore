@@ -1,0 +1,17 @@
+env/
+.*\.pyc
+*\.directory
+.*\.swp
+.*\.swo
+.*\.swn
+.idea/
+.DS_Store
+db.sqlite3
+celerybeat-schedule.*
+celerybeat.pid
+.*__pycache__.*
+__pycache__/
+core/local_settings.py
+dump.rdb
+celerybeat-schedule
+static/
