@@ -6,6 +6,7 @@ def home(request):
     if request.method == 'POST':
         form = ExcelFileForm(request.POST, request.FILES)
         if form.is_valid():
+            form.save()
             return redirect('home:all_data')
         else:
             pass

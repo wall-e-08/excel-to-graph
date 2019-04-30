@@ -1,6 +1,9 @@
-from django.forms import forms
+from django import forms
+from .models import ExcelFile
 
 
-class ExcelFileForm(forms.Form):
-    excel_file = forms.FileField()
+class ExcelFileForm(forms.ModelForm):
+    class Meta:
+        model = ExcelFile
+        fields = '__all__'
 
