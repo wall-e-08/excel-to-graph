@@ -14,5 +14,5 @@ __pycache__/
 core/local_settings.py
 dump.rdb
 celerybeat-schedule
-static/
-spreadsheets/
+/static/
+/spreadsheets/
