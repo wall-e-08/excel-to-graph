@@ -12,7 +12,7 @@ def home(request):
         form = ExcelFileForm(request.POST, request.FILES)
         if form.is_valid():
             f = form.save()
-            return redirect('home:data_sheet', f.id)
+            return redirect('home:select_data', f.id)
     else:
         form = ExcelFileForm()
     ctx = {
