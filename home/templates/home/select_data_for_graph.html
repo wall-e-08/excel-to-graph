@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_js %}
+    <script src="{% static 'home/js/vue.dev.js' %}"></script>
+    <script src="{% static 'home/js/canvasjs.min.js' %}"></script>
+{% endblock %}
+
+
+{% block content %}
+    {% if not excl %}
+        <div class="alert alert-danger text-center">
+            Sorry File <b>NOT</b> found !!
+        </div>
+    {% else %}
+        <div id="data-manipulator">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <label for="select-data"></label>
+                        <select class="custom-select" id="select-data" aria-label="" v-model="now_selected">
+                            <option value="" selected disabled>Choose XY pair...</option>
+                            <option :value="xy" v-for="xy in xy_choices">[[ xy ]]</option>
+                        </select>
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="button" @click="select_data">Select for Graph</button>
+                        </div>
+                    </div>
+                    <div class="mt-5" v-if="success_msg || err_msg">
+                        <div class="alert alert-success" v-if="success_msg">[[ success_msg ]]</div>
+                        <div class="alert alert-danger" v-if="err_msg">[[ err_msg ]]</div>
+                    </div>
+                    <div class="mt-5" v-if="existed_data.length">
+                        <h3>Saved Data:</h3>
+                        <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+                            <div class="btn-group mr-2" role="group" v-for="ed, i in existed_data">
+                                <button type="button" class="btn btn-secondary" @click="render_graph(ed)">[[ i+1 ]]</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <table class="table table-bordered text-center">
+                        <tr v-if="xy_selected.length">
+                            <th>X</th>
+                            <th>Y</th>
+                            <th>Remove?</th>
+                        </tr>
+                        <tr v-for="xy in xy_selected">
+                            <td>[[ xy[0] ]]</td>
+                            <td>[[ xy[1] ]]</td>
+                            <td>
+                                <button class="btn btn-danger btn-sm" @click="delete_xy(xy)" style="line-height: 1;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="#fff">
+                                        <path d="M3 6v18h18v-18h-18zm5 14c0 .552-.448 1-1 1s-1-.448-1-1v-10c0-.552.448-1 1-1s1 .448 1 1v10zm5 0c0 .552-.448 1-1 1s-1-.448-1-1v-10c0-.552.448-1 1-1s1 .448 1 1v10zm5 0c0 .552-.448 1-1 1s-1-.448-1-1v-10c0-.552.448-1 1-1s1 .448 1 1v10zm4-18v2h-20v-2h5.711c.9 0 1.631-1.099 1.631-2h5.315c0 .901.73 2 1.631 2h5.712z"/>
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    </table>
+                    <button v-if="xy_selected.length > 1" class="btn btn-primary" @click="save_data_get_graph">Save Data & get graph</button>
+                </div>
+                <div class="col-12"><hr></div>
+                <div class="col-12">
+                    <div id="graph-container" class="w-100" height="400"></div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+    {% if excl %}
+        <script>
+            new Vue({
+                el: '#data-manipulator',
+                delimiters: ['[[', ']]'],
+                data: {
+                    existed_data: [],
+                    now_selected: '',
+                    xy_choices: [{% for data in xl_data %}
+                        {% if forloop.counter0 > 0 %}{{ data|safe }},{% endif %}
+                    {% endfor %}],
+                    xy_selected: [],
+                    err_msg: '',
+                    success_msg: '',
+                },
+                methods: {
+                    sort_arr_by_x: function (_a, _b) {
+                        let a = parseInt(_a[0]), b = parseInt(_b[0]);
+                        if (a === b) return 0;
+                        else return (a < b) ? -1 : 1;
+                    },
+                    select_data: function () {
+                        let _t = this;
+                        if (_t.now_selected) {
+                            _t.xy_selected.push(_t.now_selected);
+                            _t.now_selected = '';
+                        }
+                    },
+                    delete_xy: function (item) {
+                        let _t = this;
+                        let index = _t.xy_selected.indexOf(item);
+                        if (index !== -1) _t.xy_selected.splice(index, 1);
+                    },
+                    save_data_get_graph: function () {
+                        let _t = this;
+                        let data_for_graph = [];
+                        let sorted_xy = _t.xy_selected.sort(_t.sort_arr_by_x);
+
+                        for (let i=0; i<sorted_xy.length; i++) {
+                            data_for_graph.push({
+                                x: parseInt(sorted_xy[i][0]),
+                                y: parseInt(sorted_xy[i][1]),
+                            })
+                        }
+                        let chart = new CanvasJS.Chart("graph-container", {
+                            animationEnabled: true,
+                            theme: "light2",
+                            title: {
+                                text: "Graph with co-ordinates"
+                            },
+                            axisY: {
+                                includeZero: true
+                            },
+                            data: [{
+                                type: "line",
+                                dataPoints: data_for_graph
+                            }]
+                        });
+
+                        $.ajax({
+                            url: '{% url 'home:ajax_save_xy_data' %}',
+                            method: 'get', dataType: 'json',
+                            data: {
+                                ds_id: "{{ ds_id }}",
+                                data: JSON.stringify(_t.xy_selected),
+                            },
+                            success: function (json) {
+                                console.log(json);
+                                if (json.success) {
+                                    _t.success_msg = "Data Saved successfully!";
+                                    _t.err_msg = '';
+                                    chart.render();
+                                    _t.existed_data.push(_t.xy_selected)
+                                } else {
+                                    _t.err_msg = json.err_msg ? json.err_msg: 'Data cannot be saved, please try again or reload browser';
+                                    _t.success_msg = ''
+                                }
+                            },
+                            error: function (json) {
+                                console.log(json);
+                                _t.err_msg = json.err_msg ? json.err_msg: 'Unexpected error';
+                                _t.success_msg = ''
+                            }
+                        })
+                    },
+                    render_graph: function (ed) {
+                        let _t = this;
+                        let data_for_graph = [];
+                        let sorted_xy = ed.sort(_t.sort_arr_by_x);
+
+                        for (let i=0; i<sorted_xy.length; i++) {
+                            data_for_graph.push({
+                                x: parseInt(sorted_xy[i][0]),
+                                y: parseInt(sorted_xy[i][1]),
+                            })
+                        }
+                        let chart = new CanvasJS.Chart("graph-container", {
+                            animationEnabled: true,
+                            theme: "light2",
+                            title: {
+                                text: "Graph with co-ordinates"
+                            },
+                            axisY: {
+                                includeZero: true
+                            },
+                            data: [{
+                                type: "line",
+                                dataPoints: data_for_graph
+                            }]
+                        });
+                        chart.render();
+                        {#chart.options.data[0].dataPoints = data_for_graph;#}
+                    }
+                },
+                created: function () {
+                    let _t = this;
+                    {% for gd in existed_gd %}
+                        _t.existed_data.push({{ gd.coordinates|safe }});
+                    {% endfor %}
+                }
+            })
+        </script>
+    {% endif %}
+{% endblock %}

@@ -2,5 +2,36 @@
 
 
 {% block content %}
-WORKING....................!!!
+
+    {% if not excl %}
+        <div class="alert alert-danger text-center">
+            Sorry File <b>NOT</b> found !!
+        </div>
+    {% else %}
+        <a href="{% url 'home:select_data' ds_id %}" class="btn btn-primary">Select data</a>
+        <table class="table table-bordered my-5">
+            <thead>
+                <tr>
+                    {#<th scope="col">#</th>#}
+                    <th scope="col">X</th>
+                    <th scope="col">Y</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for data in xl_data %}
+                    {% if forloop.counter0 > 0 %}
+                        <tr>
+                            {#<th scope="row">{{ forloop.counter0 }}</th>#}
+                            {% for dt in data %}
+                                <td>{{ dt }}</td>
+                            {% endfor %}
+
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{% url 'home:select_data' ds_id %}" class="btn btn-primary">Select data</a>
+    {% endif %}
+
 {% endblock %}

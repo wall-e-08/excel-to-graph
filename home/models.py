@@ -12,3 +12,16 @@ class ExcelFile(models.Model):
     )
 
 
+class GraphData(models.Model):
+    xl_file = models.ForeignKey(
+        'ExcelFile',
+        on_delete=models.CASCADE,
+    )
+    coordinates = models.TextField()
+
+    class Meta:
+        unique_together = ('xl_file', 'coordinates')
+
+
+
+
