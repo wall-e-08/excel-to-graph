@@ -74,7 +74,7 @@ def ajax_save_xy_data(request):
             err_msg = er
         except IntegrityError as er:
             print(er)
-            err_msg = "Same data cannot be saved more than once"
+            err_msg = "Data already saved! Same data cannot be saved more than once"
     return JsonResponse({
         "success": False,
         "err_msg": err_msg

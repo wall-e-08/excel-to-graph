@@ -1,4 +1,4 @@
-##Project installation process:
+## Project installation process:
 
  required: `python3`, `django2`
 

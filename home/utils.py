@@ -22,8 +22,9 @@ def get_data_from_sheet(file_dir):
     xl_data = []
     for s in wb.sheets():
         for row in range(0, s.nrows):
-            col_names = s.row(0)
-            col_value = []
+            # col_names = s.row(0)
+            # col_value = []
+            value = ''
             for col in range(0, s.ncols):
                 # print("name: {}, col: {}".format(name, col))
                 value = s.cell(row, col).value
@@ -31,10 +32,10 @@ def get_data_from_sheet(file_dir):
                     value = str(int(value))
                 except ValueError:
                     pass
-                col_value.append(value)
-            if not all(v == '' for v in col_value):
+                # col_value.append(value)
+            if value:
                 # print("row {}: {}".format(row, [v for v in col_value]))
-                xl_data.append(col_value)
+                xl_data.append(value)
     return xl_data
 
 

@@ -16,11 +16,17 @@
         <div id="data-manipulator">
             <div class="row">
                 <div class="col-md-6">
+                    <p v-if="xy_selected.length < 2">Select at least 2 coordinates to create graph</p>
                     <div class="input-group">
-                        <label for="select-data"></label>
-                        <select class="custom-select" id="select-data" aria-label="" v-model="now_selected">
-                            <option value="" selected disabled>Choose XY pair...</option>
-                            <option :value="xy" v-for="xy in xy_choices">[[ xy ]]</option>
+                        <label for="select-data-x"></label>
+                        <select class="custom-select" id="select-data-x" aria-label="" v-model="now_selected_x">
+                            <option value="" selected disabled>Variable X</option>
+                            <option :value="xy" v-for="xy in filtered_x">[[ xy ]]</option>
+                        </select>
+                        <label for="select-data-y"></label>
+                        <select class="custom-select" id="select-data-y" aria-label="" v-model="now_selected_y">
+                            <option value="" selected disabled>Variable Y</option>
+                            <option :value="xy" v-for="xy in filtered_y">[[ xy ]]</option>
                         </select>
                         <div class="input-group-append">
                             <button class="btn btn-outline-secondary" type="button" @click="select_data">Select for Graph</button>
@@ -77,10 +83,10 @@
                 delimiters: ['[[', ']]'],
                 data: {
                     existed_data: [],
+                    now_selected_x: '',
+                    now_selected_y: '',
                     now_selected: '',
-                    xy_choices: [{% for data in xl_data %}
-                        {% if forloop.counter0 > 0 %}{{ data|safe }},{% endif %}
-                    {% endfor %}],
+                    xy_choices: [{% for data in xl_data %}{{ data|safe }},{% endfor %}],
                     xy_selected: [],
                     err_msg: '',
                     success_msg: '',
@@ -93,9 +99,11 @@
                     },
                     select_data: function () {
                         let _t = this;
-                        if (_t.now_selected) {
-                            _t.xy_selected.push(_t.now_selected);
-                            _t.now_selected = '';
+                        if (_t.now_selected_x && _t.now_selected_y) {
+                            let xy_pair = [_t.now_selected_x, _t.now_selected_y];
+                            _t.xy_selected.push(xy_pair.slice());
+                            _t.now_selected_x = '';
+                            _t.now_selected_y = '';
                         }
                     },
                     delete_xy: function (item) {
@@ -139,11 +147,10 @@
                             success: function (json) {
                                 console.log(json);
                                 if (json.success) {
-                                    let copy_of_selected = _t.xy_selected.slice();
                                     _t.success_msg = "Data Saved successfully!";
                                     _t.err_msg = '';
                                     chart.render();
-                                    _t.existed_data.push(copy_of_selected)
+                                    _t.existed_data.push(_t.xy_selected.slice())
                                 } else {
                                     _t.err_msg = json.err_msg ? json.err_msg: 'Data cannot be saved, please try again or reload browser';
                                     _t.success_msg = ''
@@ -190,7 +197,26 @@
                     {% for gd in existed_gd %}
                         _t.existed_data.push({{ gd.coordinates|safe }});
                     {% endfor %}
-                }
+                },
+                computed: {
+                    filtered_x: function () {
+                        let _t = this;
+                        return _t.sorted_choices;
+                        {#// not showing selected X#}
+                        {#return _t.sorted_choices.filter((el) => _t.xy_selected.map((xy) => xy[0]).indexOf(el) < 0);#}
+                    },
+                    filtered_y: function () {
+                        let _t = this;
+                        return _t.sorted_choices;
+                        {#// not showing selected Y#}
+                        {#return _t.sorted_choices.filter((el) => _t.xy_selected.map((xy) => xy[1]).indexOf(el) < 0);#}
+                    },
+                    sorted_choices: function () {
+                        return this.xy_choices.sort(function (a, b) {
+                            return parseInt(a) - parseInt(b);
+                        });
+                    },
+                },
             })
         </script>
     {% endif %}
