@@ -139,10 +139,11 @@
                             success: function (json) {
                                 console.log(json);
                                 if (json.success) {
+                                    let copy_of_selected = _t.xy_selected.slice();
                                     _t.success_msg = "Data Saved successfully!";
                                     _t.err_msg = '';
                                     chart.render();
-                                    _t.existed_data.push(_t.xy_selected)
+                                    _t.existed_data.push(copy_of_selected)
                                 } else {
                                     _t.err_msg = json.err_msg ? json.err_msg: 'Data cannot be saved, please try again or reload browser';
                                     _t.success_msg = ''
